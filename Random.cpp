@@ -1,6 +1,6 @@
 ﻿// Author: Chi-Hao Kuo
 // Created: 10/4/2015
-// Updated: 10/5/2015
+// Updated: 12/1/2015
 
 // A Random library
 
