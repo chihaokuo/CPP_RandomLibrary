@@ -4,6 +4,24 @@
 
 // A Random library
 
+/******************************************************************************
+Assumption:
+
+C++ 11 introduces a new random library so we do not need to do the old 
+srand((unsigned)time(null)), rand() work anymore. I would like to make a
+library that supports uniform, normal distribution, coin toss, and 2D/3D
+vector randomization.
+
+Approach:
+
+At first I thought of making a Random namespace and have all functions in
+it. But I would like to be able to store seed for the use of all functions.
+Because during game development, we want to use the same seed to get the same
+output every single time, for easier debugging. But in release mode we want
+the output to be random. So I decided to make it a class. So as long as we
+only use one instance (singleton) in the game we can accomplish it.
+******************************************************************************/
+
 #include <ctime>		// time
 
 #include "random.h"
@@ -311,3 +329,14 @@ int Random::DiscreteInt(DiscreteList &list)
 
 	return distribution(generator_);
 }
+
+/******************************************************************************
+Unit tests:
+1. Uniform integer by range [0-9] (http://www.cplusplus.com/reference/random/uniform_int_distribution/ example)
+2. Uniform float by range [0-1]. (http://www.cplusplus.com/reference/random/uniform_real_distribution/)
+3. Normal range with mean 0 and stand deviation 0.3. (http://www.cplusplus.com/reference/random/normal_distribution/)
+4. Coin toss with roughly 50% chance on true and false. (http://www.cplusplus.com/reference/random/bernoulli_distribution/)
+
+Unit tests not done:
+1. Discrete distribution list.
+******************************************************************************/
