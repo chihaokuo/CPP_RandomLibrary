@@ -1,30 +1,22 @@
-﻿// Author: Chi-Hao Kuo
-// Created: 10/4/2015
-// Updated: 12/1/2015
+﻿/******************************************************************************/
+/*!
+\file		Random.cpp
+\project	AI Framework
+\author		Chi-Hao Kuo
+\summary	C++ Random library.
 
-// A Random library
+Copyright (C) 2016 DigiPen Institute of Technology.
+Reproduction or disclosure of this file or its contents without the prior
+written consent of DigiPen Institute of Technology is prohibited.
+*/
+/******************************************************************************/
 
-/******************************************************************************
-Assumption:
+#include <ctime>
 
-C++ 11 introduces a new random library so we do not need to do the old 
-srand((unsigned)time(null)), rand() work anymore. I would like to make a
-library that supports uniform, normal distribution, coin toss, and 2D/3D
-vector randomization.
+#include "Random.h"
+#include "MyAssert.h"
 
-Approach:
-
-At first I thought of making a Random namespace and have all functions in
-it. But I would like to be able to store seed for the use of all functions.
-Because during game development, we want to use the same seed to get the same
-output every single time, for easier debugging. But in release mode we want
-the output to be random. So I decided to make it a class. So as long as we
-only use one instance (singleton) in the game we can accomplish it.
-******************************************************************************/
-
-#include <ctime>		// time
-
-#include "random.h"
+// public functions
 
 /*--------------------------------------------------------------------------*
 Name:           Random
@@ -35,7 +27,7 @@ Arguments:      None.
 
 Returns:        None.
 *---------------------------------------------------------------------------*/
-Random::Random() : seed_(RandomSeed())
+Random::Random() : m_seed(RandomSeed())
 {
 	UseDefaultSeed();
 }
@@ -49,7 +41,7 @@ Arguments:      seed: default seed for random number engine.
 
 Returns:        None.
 *---------------------------------------------------------------------------*/
-Random::Random(unsigned int seed) : seed_(seed)
+Random::Random(unsigned int seed) : m_seed(seed)
 {
 	UseDefaultSeed();
 }
@@ -68,6 +60,21 @@ Random::~Random()
 }
 
 /*--------------------------------------------------------------------------*
+Name:           SetSeed
+
+Description:    Set seed for random number engine.
+
+Arguments:      seed: Seed for random number engine.
+
+Returns:        None.
+*---------------------------------------------------------------------------*/
+void Random::SetSeed(unsigned int seed)
+{
+	m_seed = seed;
+	UseDefaultSeed();
+}
+
+/*--------------------------------------------------------------------------*
 Name:           UseRandomSeed
 
 Description:    Use random seed for generator.
@@ -78,7 +85,7 @@ Returns:        None.
 *---------------------------------------------------------------------------*/
 void Random::UseRandomSeed(void)
 {
-	generator_.seed(RandomSeed());
+	m_generator.seed(RandomSeed());
 }
 
 /*--------------------------------------------------------------------------*
@@ -92,37 +99,7 @@ Returns:        None.
 *---------------------------------------------------------------------------*/
 void Random::UseDefaultSeed(void)
 {
-	generator_.seed(seed_);
-}
-
-
-/*--------------------------------------------------------------------------*
-Name:           GetSeed
-
-Description:    Get seed for random number engine.
-
-Arguments:      None.
-
-Returns:        Seed for random number engine.
-*---------------------------------------------------------------------------*/
-unsigned int Random::GetSeed(void)
-{
-	return seed_;
-}
-
-/*--------------------------------------------------------------------------*
-Name:           SetSeed
-
-Description:    Set seed for random number engine.
-
-Arguments:      seed: Seed for random number engine.
-
-Returns:        None.
-*---------------------------------------------------------------------------*/
-void Random::SetSeed(unsigned int seed)
-{
-	seed_ = seed;
-	UseDefaultSeed();
+	m_generator.seed(m_seed);
 }
 
 /*--------------------------------------------------------------------------*
@@ -132,7 +109,7 @@ Description:    Obtain random seed value from time(NULL).
 
 Arguments:      None.
 
-Returns:        Seed value from time(NULL).
+Returns:        unsigned int:	Seed value from time(NULL).
 *---------------------------------------------------------------------------*/
 unsigned int Random::RandomSeed(void)
 {
@@ -144,16 +121,16 @@ Name:           RangeInt
 
 Description:    Returns a random int number between and min[inclusive] and max[inclusive]
 
-Arguments:      min: lower boundry of range.
-				max: upper boundry of range.
+Arguments:      min:	lower boundry of range.
+				max:	upper boundry of range.
 
-Returns:        Random int number between min~max.
+Returns:        int:	Random int number between min~max.
 *---------------------------------------------------------------------------*/
 int Random::RangeInt(int min, int max)
 {
 	std::uniform_int_distribution<int> distribution(min, max);
 
-	return distribution(generator_);
+	return distribution(m_generator);
 }
 
 /*--------------------------------------------------------------------------*
@@ -161,16 +138,16 @@ Name:           RangeFloat
 
 Description:    Returns a random float number between and min[inclusive] and max[inclusive]
 
-Arguments:      min: lower boundry of range.
-				max: upper boundry of range.
+Arguments:      min:	lower boundry of range.
+				max:	upper boundry of range.
 
-Returns:        Random float number between min~max.
+Returns:        float:	Random float number between min~max.
 *---------------------------------------------------------------------------*/
 float Random::RangeFloat(float min, float max)
 {
 	std::uniform_real_distribution<float> distribution(min, max);
 
-	return distribution(generator_);
+	return distribution(m_generator);
 }
 
 /*--------------------------------------------------------------------------*
@@ -181,20 +158,20 @@ Description:    Returns a normal distribution random float number with mean and 
 				95% of values are within 2 standard deviations of the mean.
 				99.7% of values are within 3 standard deviations of the mean.
 
-Arguments:      mean: mean value of normal distribution.
-				stddev: standard deviation.
-				is_clamp: flag on if the random number is clamped between min~max.
-				calculate_minmax: should the min/max value be auto-calculated (as 3 times stddev).
-				min: lower boundry of range.
-				max: upper boundry of range.
+Arguments:      mean:				mean value of normal distribution.
+				stddev:				standard deviation.
+				is_clamp:			flag on if the random number is clamped between min~max.
+				calculate_minmax:	should the min/max value be auto-calculated (as 3 times stddev).
+				min:				lower boundry of range.
+				max:				upper boundry of range.
 
-Returns:        Random normal (Gaussian) float number (between min~max if clamped).
+Returns:        float:				Random normal (Gaussian) float number (between min~max if clamped).
 *---------------------------------------------------------------------------*/
 float Random::NormalRange(float mean, float stddev, bool is_clamp, bool calculate_minmax, float min, float max)
 {
 	std::normal_distribution<float> distribution(mean, stddev);
 
-	float value = distribution(generator_);
+	float value = distribution(m_generator);
 
 	// 0.3% of values will be outside of 3 times standard deviation
 	// use the flag to eliminate such value
@@ -215,10 +192,10 @@ float Random::NormalRange(float mean, float stddev, bool is_clamp, bool calculat
 
 		while ((value < min) || (value > max))
 		{
-			value = distribution(generator_);
+			value = distribution(m_generator);
 			++counter;
 
-			assert(counter < 10 && "Can't produce normal distribution random number");
+			ASSERT_MSG(counter < 10 ,"Can't produce normal distribution random number");
 		}
 	}
 
@@ -233,10 +210,10 @@ Description:    Returns a normal distribution random float number within the ran
 				95% of values are within 2 standard deviations of the mean.
 				99.7% of values are within 3 standard deviations of the mean.
 
-Arguments:      min: lower boundry of range.
-				max: upper boundry of range.
+Arguments:      min:	lower boundry of range.
+				max:	upper boundry of range.
 
-Returns:        Random normal (Gaussian) float number between min~max.
+Returns:        float:	Random normal (Gaussian) float number between min~max.
 *---------------------------------------------------------------------------*/
 float Random::NormalRangeMinMax(float min, float max)
 {
@@ -250,16 +227,16 @@ float Random::NormalRangeMinMax(float min, float max)
 }
 
 /*--------------------------------------------------------------------------*
-Name:           NormalBoundry
+Name:           NormalBoundary
 
-Description:    Return the boundry value from normal distribution.
+Description:    Return the boundary value from normal distribution.
 				Which is 3 times of standard deviation (99.7% of values are within mean).
 
-Arguments:      stddev: standard deviation.
+Arguments:      stddev:		standard deviation.
 
-Returns:        Boundary from mean value.
+Returns:        float:		Boundary from mean value.
 *---------------------------------------------------------------------------*/
-float Random::NormalBoundry(float stddev)
+float Random::NormalBoundary(float stddev)
 {
 	return stddev * 3.0f;
 }
@@ -267,33 +244,33 @@ float Random::NormalBoundry(float stddev)
 /*--------------------------------------------------------------------------*
 Name:           NormalMin
 
-Description:    Return the lower boundry value from normal distribution (99.7% of values are within mean).
+Description:    Return the lower boundary value from normal distribution (99.7% of values are within mean).
 				Which is 3 times of standard deviation (99.7% of values are within mean).
 
-Arguments:      mean: mean value of normal distribution.
-				stddev: standard deviation.
+Arguments:      mean:		mean value of normal distribution.
+				stddev:		standard deviation.
 
-Returns:        Lower boundary from mean value.
+Returns:        float:		Lower boundary from mean value.
 *---------------------------------------------------------------------------*/
 float Random::NormalMin(float mean, float stddev)
 {
-	return (mean - NormalBoundry(stddev));
+	return (mean - NormalBoundary(stddev));
 }
 
 /*--------------------------------------------------------------------------*
 Name:           NormalMax
 
-Description:    Return the upper boundry value from normal distribution (99.7% of values are within mean).
+Description:    Return the upper boundary value from normal distribution (99.7% of values are within mean).
 				Which is 3 times of standard deviation (99.7% of values are within mean).
 
-Arguments:      mean: mean value of normal distribution.
-				stddev: standard deviation.
+Arguments:      mean:		mean value of normal distribution.
+				stddev:		standard deviation.
 
-Returns:        Upper boundary from mean value.
+Returns:        float:		Upper boundary from mean value.
 *---------------------------------------------------------------------------*/
 float Random::NormalMax(float mean, float stddev)
 {
-	return (mean + NormalBoundry(stddev));
+	return (mean + NormalBoundary(stddev));
 }
 
 /*--------------------------------------------------------------------------*
@@ -303,40 +280,13 @@ Description:    Returns true/false based on percentage (Bernoulli distribution)
 
 Arguments:      percentage: Percentage value for True.
 
-Returns:        True or false.
+Returns:        bool:		True or false.
 *---------------------------------------------------------------------------*/
 bool Random::CoinToss(float percentage)
 {
-	assert((percentage <= 1.0f) && (percentage >= 0.0f) && "Percentage should be [0-1]");
+	ASSERT_MSG((percentage <= 1.0f) && (percentage >= 0.0f), "Percentage should be [0-1]");
 
 	std::bernoulli_distribution distribution(percentage);
 
-	return distribution(generator_);
+	return distribution(m_generator);
 }
-
-/*--------------------------------------------------------------------------*
-Name:           DiscreteInt
-
-Description:    Return the discrete distribution from the weighted list.
-
-Arguments:      list: initializer_list container for weight of each index.
-
-Returns:        Random int number based on weight.
-*---------------------------------------------------------------------------*/
-int Random::DiscreteInt(DiscreteList &list)
-{
-	std::discrete_distribution<int> distribution(list);
-
-	return distribution(generator_);
-}
-
-/******************************************************************************
-Unit tests:
-1. Uniform integer by range [0-9] (http://www.cplusplus.com/reference/random/uniform_int_distribution/ example)
-2. Uniform float by range [0-1]. (http://www.cplusplus.com/reference/random/uniform_real_distribution/)
-3. Normal range with mean 0 and stand deviation 0.3. (http://www.cplusplus.com/reference/random/normal_distribution/)
-4. Coin toss with roughly 50% chance on true and false. (http://www.cplusplus.com/reference/random/bernoulli_distribution/)
-
-Unit tests not done:
-1. Discrete distribution list.
-******************************************************************************/

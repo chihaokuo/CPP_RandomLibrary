@@ -1,8 +1,15 @@
-﻿// Author: Chi-Hao Kuo
-// Created: 10/4/2015
-// Updated: 10/5/2015
+﻿/******************************************************************************/
+/*!
+\file		Random.h
+\project	AI Framework
+\author		Chi-Hao Kuo
+\summary	C++ Random library.
 
-// A Random library
+Copyright (C) 2016 DigiPen Institute of Technology.
+Reproduction or disclosure of this file or its contents without the prior
+written consent of DigiPen Institute of Technology is prohibited.
+*/
+/******************************************************************************/
 
 #pragma once
 
@@ -10,9 +17,6 @@
 
 // static variables
 
-typedef std::initializer_list<double> DiscreteList;
-
-static const float PI = 3.1415926f;
 static const int DEFAULT_UNI_MIN_I = 0;
 static const int DEFAULT_UNI_MAX_I = 10000;
 static const float DEFAULT_UNI_MIN_F = 0.0f;
@@ -25,14 +29,10 @@ static const float DEFAULT_BER_PERC = 0.5f;
 
 class Random
 {
-private:
-	// Pseudo-random number engine
-	std::default_random_engine generator_;
-	
-	// default seed value
-	unsigned int seed_;
-
 public:
+
+	/* constructor/destructor */
+
 	// constructor
 	Random();
 	Random(unsigned int seed);
@@ -40,17 +40,18 @@ public:
 	// destructor
 	~Random();
 
+	/* getter/setter */
+
+	unsigned int GetSeed(void)				{ return m_seed; }
+	void SetSeed(unsigned int seed);
+
+	/* methods */
+
 	// use random seed for generator
 	void UseRandomSeed(void);
 
 	// return to default seed for generator
 	void UseDefaultSeed(void);
-
-	// getter
-	unsigned int GetSeed(void);
-
-	// setter
-	void SetSeed(unsigned int seed);
 
 	// obtain random seed value
 	unsigned int RandomSeed(void);
@@ -65,29 +66,41 @@ public:
 	// 68% of values are within 1 standard deviation of the mean
 	// 95% of values are within 2 standard deviations of the mean
 	// 99.7% of values are within 3 standard deviations of the mean
-	float NormalRange(float mean = DEFAULT_NOR_MEAN, float stddev = DEFAULT_NOR_STDDEV, bool is_clamp = true, bool calculate_minmax = true, float min = DEFAULT_NOR_MIN, float max = DEFAULT_NOR_MAX);
+	float NormalRange(float mean = DEFAULT_NOR_MEAN, 
+		float stddev = DEFAULT_NOR_STDDEV, 
+		bool is_clamp = true, 
+		bool calculate_minmax = true, 
+		float min = DEFAULT_NOR_MIN, 
+		float max = DEFAULT_NOR_MAX);
 
 	// Returns a normal distribution random float number within the range of min and max
 	// mean is the (min + max) / 2
 	// and standard deviation is (mean - min) / 3
 	// 68% of values are within 1 standard deviation of the mean
 	// 95% of values are within 2 standard deviations of the mean
-	// 99.7% of values are within 3 standard deviations of the mean
+	// 100% of values are within 3 standard deviations of the mean
 	float NormalRangeMinMax(float min = DEFAULT_NOR_MIN, float max = DEFAULT_NOR_MAX);
 
-	// return the boundry value from normal distribution
+	// return the boundary value from normal distribution
 	// which is more than 3 times of standard deviation
-	float NormalBoundry(float stddev = DEFAULT_NOR_STDDEV);
+	float NormalBoundary(float stddev = DEFAULT_NOR_STDDEV);
 
-	// return the lower boundry value from normal distribution
+	// return the lower boundary value from normal distribution
 	float NormalMin(float mean = DEFAULT_NOR_MEAN, float stddev = DEFAULT_NOR_STDDEV);
 
-	// return the upper boundry value from normal distribution
+	// return the upper boundary value from normal distribution
 	float NormalMax(float mean = DEFAULT_NOR_MEAN, float stddev = DEFAULT_NOR_STDDEV);
 
 	// returns true/false based on percentage (Bernoulli distribution)
 	bool CoinToss(float percentage = DEFAULT_BER_PERC);
 
-	// return the discrete distribution from the weighted list
-	int DiscreteInt(DiscreteList &list);
+private:
+
+	/* variables */
+
+	// Pseudo-random number engine
+	std::default_random_engine m_generator;
+
+	// default seed value
+	unsigned int m_seed;
 };
